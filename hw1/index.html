@@ -6,29 +6,18 @@
     <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
        .neighborhood { fill: #EEE; stroke: white; stroke-width: 2px; } 
-       
-       .private {
-        color:blue;
-       }
-
        .public {
-        color:red;
+        color: blue;
        }
-
-       body {
-        width:1500px;
+       .private {
+        color: red;
        }
     </style>
    
 
   <body>
-    <h1>Tree Planting in SF from 1970-2020</h1>
-    <svg
-      id="sfmap"
-      height="400"
-      width="400"
-      style="background: #fff; margin-top: 50px"
-    ></svg>
+    <h1>Tree Planting in SF from 1980-2020</h1>
+    <h2><span class="public">Public</span> versus <span class="private"> Private</span></h2>
 
     <svg
       id="sfmap1"
@@ -131,13 +120,10 @@
         "Private": 0
       }
 
-      // array of trees that captures all trees older than the cut off date
+      // filter data based on year planted
       let filteredTrees = [];
 
-      // array of trees that captures only the trees within the given time interval
-      let filteredNewTrees = [];
-
-      // all trees with valid dates
+      // all trees with valid dates and species in the target species
       allTrees = [];
 
       trees.forEach((d) => {
@@ -151,16 +137,12 @@
             allTrees.push(d);
             date = parseDate(d.PlantDate);
 
-            // condition for isolating by interval: date > firstDateToCompare && secondDateToCompare >= date
-             if ( date > firstDateToCompare && secondDateToCompare >= date) {
-              filteredNewTrees.push(d);
-              }
+            // condition for accumulating: date > firstDateToCompare && secondDateToCompare >= date
 
-              else if (date <= firstDateToCompare) {
+            if (date <= firstDateToCompare) {
                 publicPrivateCounts[d.qCaretaker] += 1
                 filteredTrees.push(d);
-              }
-           
+            }
           }
         }
       });
@@ -170,16 +152,11 @@
         //   date = parseDate("01/01/1954 0:00");
         // }
 
-      console.log("filtered trees with newTree", filteredNewTrees);
-      console.log("filtered trees not new", filteredTrees);
+      console.log("filtered trees with newTree", filteredTrees);
 
       filteredTrees.forEach((d) => {
         d.Position = projection([d.Longitude, d.Latitude]);
         //if (!uniqueSpecies.has(d.qSpecies)) uniqueSpecies.add(d.qSpecies);
-      });
-
-      filteredNewTrees.forEach((d) => {
-        d.Position = projection([d.Longitude, d.Latitude]);
       });
 
       // considered including NA values (pre 1955) and turning them all to 1954 but did not end up doing it
@@ -191,9 +168,9 @@
         .attr("x", 20)
         .attr("y", 40);
 
-      svg.append("text").text("Public: " + publicPrivateCounts["DPW"]).attr("x", 20).attr("y", 60).attr("class", "public")
+      svg.append("text").text("Public: " + publicPrivateCounts["DPW"]).attr("x", 20).attr("y", 60)
 
-      svg.append("text").text("Private: " + publicPrivateCounts["Private"]).attr("x", 20).attr("y", 80).attr("class", "private")
+      svg.append("text").text("Private: " + publicPrivateCounts["Private"]).attr("x", 20).attr("y", 80);
 
       // use plot size to decide radius
       const plotSizeExtent = d3.extent(allTrees, (d) => +d.PlotSize);
@@ -206,12 +183,12 @@
       // create color scale
       var colorScale = d3.scaleOrdinal()
         .domain(publicPrivate)
-        .range(["red", "blue"]);
+        .range(["blue", "red"]);
 
       // draw trees onto map
       map
         .selectAll("circle")
-        .data(filteredNewTrees)
+        .data(filteredTrees)
         .join("circle")
         .attr("r", (d) => plotSizeScale(d.PlotSize))
         .attr("fill",(d) => colorScale(d.qCaretaker))
@@ -220,7 +197,6 @@
         .attr("cy", (d) => d.Position[1]);
     };
 
-    requestData("01/01/70 0:00", "01/01/80 0:00", "#sfmap");
     requestData("01/01/80 0:00", "01/01/90 0:00", "#sfmap1");
     requestData("01/01/90 0:00", "01/01/00 0:00", "#sfmap2");
     requestData("01/01/00 0:00", "01/01/10 0:00", "#sfmap3");
