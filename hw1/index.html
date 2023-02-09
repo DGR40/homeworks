@@ -1,0 +1,229 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Homework 1</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+       .neighborhood { fill: #EEE; stroke: white; stroke-width: 2px; } 
+       
+       .private {
+        color:blue;
+       }
+
+       .public {
+        color:red;
+       }
+
+       body {
+        width:1500px;
+       }
+    </style>
+   
+
+  <body>
+    <h1>Tree Planting in SF from 1970-2020</h1>
+    <svg
+      id="sfmap"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+
+    <svg
+      id="sfmap1"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+
+    <svg
+      id="sfmap2"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+
+    <svg
+      id="sfmap3"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+
+    <svg
+      id="sfmap4"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+
+    <svg
+      id="sfmap5"
+      height="400"
+      width="400"
+      style="background: #fff; margin-top: 50px"
+    ></svg>
+  </body>
+
+  <script type="text/javascript">
+    // make the map given a decade planted
+    const requestData = async function (year1, year2, targetMap) {
+      const sf = await d3.json("SF-Neighborhoods.geo.json");
+      console.log(sf);
+
+      const svg = d3.select(targetMap);
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // get neighborhoods
+      var neighborhoods = topojson.feature(sf, sf.objects.SFNeighborhoods);
+
+      // create path
+      var projection = d3
+        .geoMercator()
+        .fitSize([mapWidth, mapHeight], neighborhoods);
+      var path = d3.geoPath().projection(projection);
+
+      // draw neighborhood lines
+      map
+        .selectAll("path.neighborhood")
+        .data(neighborhoods.features)
+        .join("path")
+        .attr("class", "neighborhood")
+        .attr("d", path);
+
+      // Import tree dataset
+      const trees = await d3.csv("Street_Tree_List-2022-01-30_FILTERED.csv");
+
+      // get all unique species
+      // initialize unique species set
+      // let uniqueSpecies = new Set();
+
+      // make color scale with unique species?
+
+      // parse time data
+      var parseDate = d3.timeParse("%m/%d/%y %I:%M");
+
+      // add labels for date
+      svg
+        .append("text")
+        .text(year1.slice(0, -4) + "- " + year2.slice(0, -4))
+        .attr("x", 20)
+        .attr("y", 20);
+
+      // check to see if species is one of our target species
+        
+      //let targetSpecies = ["Platanus x hispanica :: Sycamore: London Plane","Metrosideros excelsa :: New Zealand Xmas Tree","Lophostemon confertus :: Brisbane Box", "Pittosporum undulatum :: Victorian Box", "Tristaniopsis laurina :: Swamp Myrtle","Ficus microcarpa nitida 'Green Gem' :: Indian Laurel Fig Tree 'Green Gem'","Magnolia grandiflora :: Southern Magnolia","Prunus cerasifera :: Cherry Plum","Arbutus 'Marina' :: Hybrid Strawberry Tree"];
+
+      // caretaker values for public and private trees 
+      let publicPrivate = ["DPW", "Private"]
+
+      // init dict to count public v private
+      let publicPrivateCounts = {
+        "DPW": 0,
+        "Private": 0
+      }
+
+      // array of trees that captures all trees older than the cut off date
+      let filteredTrees = [];
+
+      // array of trees that captures only the trees within the given time interval
+      let filteredNewTrees = [];
+
+      // all trees with valid dates
+      allTrees = [];
+
+      trees.forEach((d) => {
+        let firstDateToCompare = parseDate(year1);
+        let secondDateToCompare = parseDate(year2);
+
+        if (publicPrivate.includes(d.qCaretaker)) {
+
+          // if date exists, convert to Date Obj and see if falls within given years
+          if (d.PlantDate) {
+            allTrees.push(d);
+            date = parseDate(d.PlantDate);
+
+            // condition for isolating by interval: date > firstDateToCompare && secondDateToCompare >= date
+             if ( date > firstDateToCompare && secondDateToCompare >= date) {
+              filteredNewTrees.push(d);
+              }
+
+              else if (date <= firstDateToCompare) {
+                publicPrivateCounts[d.qCaretaker] += 1
+                filteredTrees.push(d);
+              }
+           
+          }
+        }
+      });
+
+        // if date is NA, convert automatically to 1954
+        // else {
+        //   date = parseDate("01/01/1954 0:00");
+        // }
+
+      console.log("filtered trees with newTree", filteredNewTrees);
+      console.log("filtered trees not new", filteredTrees);
+
+      filteredTrees.forEach((d) => {
+        d.Position = projection([d.Longitude, d.Latitude]);
+        //if (!uniqueSpecies.has(d.qSpecies)) uniqueSpecies.add(d.qSpecies);
+      });
+
+      filteredNewTrees.forEach((d) => {
+        d.Position = projection([d.Longitude, d.Latitude]);
+      });
+
+      // considered including NA values (pre 1955) and turning them all to 1954 but did not end up doing it
+
+      // add label for amt of total trees
+      svg
+        .append("text")
+        .text("Total trees planted: " + String(filteredTrees.length))
+        .attr("x", 20)
+        .attr("y", 40);
+
+      svg.append("text").text("Public: " + publicPrivateCounts["DPW"]).attr("x", 20).attr("y", 60).attr("class", "public")
+
+      svg.append("text").text("Private: " + publicPrivateCounts["Private"]).attr("x", 20).attr("y", 80).attr("class", "private")
+
+      // use plot size to decide radius
+      const plotSizeExtent = d3.extent(allTrees, (d) => +d.PlotSize);
+      console.log(plotSizeExtent);
+      const plotSizeScale = d3
+        .scaleLinear()
+        .domain(plotSizeExtent)
+        .range([2, 6]);
+
+      // create color scale
+      var colorScale = d3.scaleOrdinal()
+        .domain(publicPrivate)
+        .range(["red", "blue"]);
+
+      // draw trees onto map
+      map
+        .selectAll("circle")
+        .data(filteredNewTrees)
+        .join("circle")
+        .attr("r", (d) => plotSizeScale(d.PlotSize))
+        .attr("fill",(d) => colorScale(d.qCaretaker))
+        .attr("opacity", (d) => 0.4)
+        .attr("cx", (d) => d.Position[0])
+        .attr("cy", (d) => d.Position[1]);
+    };
+
+    requestData("01/01/70 0:00", "01/01/80 0:00", "#sfmap");
+    requestData("01/01/80 0:00", "01/01/90 0:00", "#sfmap1");
+    requestData("01/01/90 0:00", "01/01/00 0:00", "#sfmap2");
+    requestData("01/01/00 0:00", "01/01/10 0:00", "#sfmap3");
+    requestData("01/01/10 0:00", "01/01/20 0:00", "#sfmap4");
+  </script>
+</html>
