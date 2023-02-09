@@ -12,6 +12,9 @@
        .private {
         color: red;
        }
+       body {
+        width:2600px;
+       }
     </style>
    
 
@@ -20,39 +23,40 @@
     <h2><span class="public">Public</span> versus <span class="private"> Private</span></h2>
 
     <svg
+      id="sfmap"
+      height="500"
+      width="500"
+      style="background: #fff; margin-top: 50px;"
+      ></svg>
+
+    <svg
       id="sfmap1"
-      height="400"
-      width="400"
+      height="500"
+      width="500"
       style="background: #fff; margin-top: 50px"
     ></svg>
 
     <svg
       id="sfmap2"
-      height="400"
-      width="400"
+      height="500"
+      width="500"
       style="background: #fff; margin-top: 50px"
     ></svg>
 
     <svg
       id="sfmap3"
-      height="400"
-      width="400"
+      height="500"
+      width="500"
       style="background: #fff; margin-top: 50px"
     ></svg>
 
     <svg
       id="sfmap4"
-      height="400"
-      width="400"
+      height="500"
+      width="500"
       style="background: #fff; margin-top: 50px"
     ></svg>
 
-    <svg
-      id="sfmap5"
-      height="400"
-      width="400"
-      style="background: #fff; margin-top: 50px"
-    ></svg>
   </body>
 
   <script type="text/javascript">
@@ -197,6 +201,7 @@
         .attr("cy", (d) => d.Position[1]);
     };
 
+    requestData("01/01/70 0:00", "01/01/80 0:00", "#sfmap");
     requestData("01/01/80 0:00", "01/01/90 0:00", "#sfmap1");
     requestData("01/01/90 0:00", "01/01/00 0:00", "#sfmap2");
     requestData("01/01/00 0:00", "01/01/10 0:00", "#sfmap3");
