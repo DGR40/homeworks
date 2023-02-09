@@ -20,7 +20,8 @@
 
   <body>
     <h1>Tree Planting in SF from 1980-2020</h1>
-    <h2><span class="public">Public</span> versus <span class="private"> Private</span></h2>
+    <h2><span class="public">Public</span> versus <span class="private"> Private</span> ownership</h2>
+    <h3>Radius represents relative tree diameter at breast height.</h3>
 
     <svg
       id="sfmap1"
@@ -172,12 +173,12 @@
       console.log(publicPrivateCounts["DPW"]);
 
       // use plot size to decide radius
-      const plotSizeExtent = d3.extent(allTrees, (d) => +d.PlotSize);
+      const plotSizeExtent = d3.extent(allTrees, (d) => +d.DBH);
       console.log(plotSizeExtent);
       const plotSizeScale = d3
         .scaleLinear()
         .domain(plotSizeExtent)
-        .range([2, 6]);
+        .range([1, 5]);
 
       // create color scale
       var colorScale = d3.scaleOrdinal()
@@ -189,7 +190,7 @@
         .selectAll("circle")
         .data(filteredTrees)
         .join("circle")
-        .attr("r", (d) => plotSizeScale(d.PlotSize))
+        .attr("r", (d) => plotSizeScale(d.DBH))
         .attr("fill",(d) => colorScale(d.qCaretaker))
         .attr("opacity", (d) => 0.4)
         .attr("cx", (d) => d.Position[0])
